@@ -11,7 +11,18 @@ var Host = (function () {
         this.reset();
     }
     Host.initLibDefault = function () {
-        var content = fs.readFileSync(path.join(__dirname, '../node_modules/typescript/bin/lib.d.ts')).toString('utf8');
+        var resolvePackageFile = function (packageName, fileName) {
+            var parentPath = [];
+            for (var i = 0;i < 10;i++) {
+                var filePath = path.join.apply(this, [__dirname].concat(parentPath).concat(['node_modules', packageName]).concat([fileName]));
+                if (fs.existsSync(filePath)) {
+                    return filePath;
+                }
+                parentPath.push('..');
+            }
+            throw new Error("Can't resolve file '" + fileName + "' of package '" + packageName + "'");
+        };
+        var content = fs.readFileSync(resolvePackageFile('typescript', path.join('bin', 'lib.d.ts'))).toString('utf8');
         this.libDefault = ts.createSourceFile('__lib.d.ts', content, 0 /* ES3 */, "0"); // Will also work for ES5 & 6
     };
     Host.prototype.reset = function () {
